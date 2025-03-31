@@ -69,7 +69,7 @@ def start_sniffing():
 def get_packets():
     conn = get_connection()
     cursor = conn.cursor(dictionary=True)
-    cursor.execute('SELECT * FROM packets')
+    cursor.execute('SELECT * FROM packets ORDER BY id DESC')
     packets = cursor.fetchall()
     cursor.close()
     conn.close()
