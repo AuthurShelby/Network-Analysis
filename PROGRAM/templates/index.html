@@ -75,9 +75,23 @@
         function fetchPackets() {
             document.querySelector('.loading').style.display = 'block';
             fetch('/get_packets')
-                .then(response => response.text())
+                .then(response => response.json())
                 .then(data => {
-                    document.getElementById('packet-data').innerHTML = data;
+                    let tableBody = document.getElementById('packet-data');
+                    tableBody.innerHTML = '';
+                    data.forEach(packet => {
+                        let row = `<tr>
+                            <td>${packet.timestamp}</td>
+                            <td>${packet.src_ip || 'N/A'}</td>
+                            <td>${packet.src_port || 'N/A'}</td>
+                            <td>${packet.dst_ip || 'N/A'}</td>
+                            <td>${packet.dst_port || 'N/A'}</td>
+                            <td>${packet.protocol_type}</td>
+                            <td>${packet.payload}</td>
+                            <td>${packet.size}</td>
+                        </tr>`;
+                        tableBody.innerHTML += row;
+                    });
                     document.querySelector('.loading').style.display = 'none';
                 })
                 .catch(error => {
