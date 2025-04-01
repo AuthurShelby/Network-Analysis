@@ -1,6 +1,6 @@
 from scapy.all import sniff, IP, TCP, UDP, Raw
-from flask import Flask, render_template 
-from datetime import datetime
+from flask import Flask, render_template , jsonify 
+from datetime import datetime , timezone
 import mysql.connector
 import threading
 
@@ -21,7 +21,7 @@ def packet_callback(packet):
     protocol_type = 'Other' # if any other protocol appears
     payload, size = ('0 bytes',) * 2
 
-    timestamp = datetime.fromtimestamp(packet.time).strftime('%Y-%m-%d %H:%M:%S')
+    timestamp = datetime.fromtimestamp(packet.time , tz=timezone.utc ).strftime('%Y-%m-%d %H:%M:%S')
     
     if IP in packet:
         src_ip = packet[IP].src
@@ -74,18 +74,7 @@ def get_packets():
     packets = cursor.fetchall()
     cursor.close()
     conn.close()
-    return ''.join(f"""
-    <tr>
-        <td>{packet['timestamp']}</td>
-        <td>{packet['src_ip']}</td>
-        <td>{packet['src_port']}</td>
-        <td>{packet['dst_ip']}</td>
-        <td>{packet['dst_port']}</td>
-        <td>{packet['protocol_type']}</td>
-        <td>{packet['payload']}</td>
-        <td>{packet['size']} bytes</td>
-    </tr>
-    """ for packet in packets)
+    return jsonify(packets)
 
 @app.route('/')
 def index():
