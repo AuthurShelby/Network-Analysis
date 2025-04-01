@@ -1,11 +1,11 @@
 from scapy.all import sniff, IP, TCP, UDP, Raw
-from flask import Flask, render_template
+from flask import Flask, render_template 
 from datetime import datetime
 import mysql.connector
 import threading
 
 app = Flask(__name__)
-
+# mysql connection 
 def get_connection():
     return mysql.connector.connect(
         host='localhost',
@@ -14,6 +14,7 @@ def get_connection():
         database='network_analysis'
     )
 
+# network packets 
 def packet_callback(packet):
 
     src_ip, src_port, dst_ip, dst_port, protocol = (None,) * 5
@@ -89,7 +90,7 @@ def get_packets():
 @app.route('/')
 def index():
     # rendering the network page
-    return render_template('network.html')
+    return render_template('index.html')
 
 if __name__ == '__main__':
     # threading is used so that multiple process can happen internally 
