@@ -1,5 +1,5 @@
 from scapy.all import sniff, IP, TCP, UDP, Raw
-from flask import Flask, render_template , jsonify 
+from flask import Flask, render_template , jsonify , redirect
 from datetime import datetime , timezone
 from collections import Counter
 import mysql.connector
@@ -48,6 +48,8 @@ def create_tables():
     conn.commit()
     cursor.close()
     conn.close()
+
+
 
 
 # for inserting the values inside the anomalies table
@@ -243,7 +245,7 @@ def start_sniffing():
 def get_packets():
     conn = get_connection()
     cursor = conn.cursor(dictionary=True)
-    cursor.execute('SELECT * FROM packets ORDER BY id DESC')
+    cursor.execute('SELECT * FROM packets ORDER BY id DESC LIMIT 50')
     packets = cursor.fetchall()
     cursor.close()
     conn.close()
@@ -255,7 +257,7 @@ def get_packets():
 def get_anomalies():
     conn = get_connection()
     cursor = conn.cursor(dictionary=True)
-    cursor.execute('SELECT * FROM anomaly_logs ORDER BY id DESC')
+    cursor.execute('SELECT * FROM anomaly_logs ORDER BY id DESC LIMIT 50')
     anomalies = cursor.fetchall()
     cursor.close()
     conn.close()
@@ -268,16 +270,27 @@ def get_anomalies():
 def get_bottlenecks():
     conn = get_connection()
     cursor = conn.cursor(dictionary=True)
-    cursor.execute('SELECT * FROM bottleneck_logs ORDER BY id DESC')
+    cursor.execute('SELECT * FROM bottleneck_logs ORDER BY id DESC LIMIT 50')
     bottlenecks = cursor.fetchall()
     cursor.close()
     conn.close()
     return jsonify(bottlenecks)
 
+
+# root '/' is the main page
 @app.route('/')
+def root():
+    return redirect('/packets')  # Redirect to the packets page
+
+@app.route('/packets')
 def index():
     # rendering the network page
-    return render_template('index.html')
+    return render_template('packets.html')
+
+@app.route('/anomalies_bottlenecks')
+def anomalies_bottlenecks():
+    # rendering the anomalies and bottlenecks page
+    return render_template('Anomalies_Bottlenecks.html')
 
 if __name__ == '__main__':
     # threading is used so that multiple process can happen internally 
