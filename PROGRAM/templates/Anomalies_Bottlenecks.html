@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bottlenecks & Anomalies</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f4f4f9;
+        }
+        header {
+            background-color: #333;
+            color: #fff;
+            padding: 10px 20px;
+            text-align: center;
+        }
+        nav {
+            background-color: #444;
+            padding: 10px;
+            text-align: center;
+        }
+        nav a {
+            color: white;
+            text-decoration: none;
+            margin: 0 15px;
+            font-weight: bold;
+        }
+        nav a:hover {
+            text-decoration: underline;
+        }
+        .container {
+            padding: 20px;
+        }
+        .section {
+            margin-bottom: 20px;
+        }
+        .section h2 {
+            margin-bottom: 10px;
+            color: #333;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+        }
+        table th, table td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+        table th {
+            background-color: #333;
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>Bottlenecks & Anomalies</h1>
+    </header>
+    <nav>
+        <a href="/packets">Packets</a>
+        <a href="/anomalies_bottlenecks">Bottlenecks & Anomalies</a>
+    </nav>
+    <div class="container">
+        <div class="section">
+            <h2>Anomalies</h2>
+            <table id="anomalies-table">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Timestamp</th>
+                        <th>Type</th>
+                        <th>Source IP</th>
+                        <th>Destination IP</th>
+                        <th>Details</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <!-- Data will be populated dynamically -->
+                </tbody>
+            </table>
+        </div>
+        <div class="section">
+            <h2>Bottlenecks</h2>
+            <table id="bottlenecks-table">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Timestamp</th>
+                        <th>Type</th>
+                        <th>Source IP</th>
+                        <th>Details</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <!-- Data will be populated dynamically -->
+                </tbody>
+            </table>
+        </div>
+    </div>
+    <script>
+        // Fetch and populate anomalies
+        function fetchAnomalies() {
+            fetch('/get_anomalies')
+                .then(response => response.json())
+                .then(data => {
+                    const tableBody = document.querySelector('#anomalies-table tbody');
+                    tableBody.innerHTML = '';
+                    data.forEach(anomaly => {
+                        const row = `
+                            <tr>
+                                <td>${anomaly.id}</td>
+                                <td>${anomaly.timestamp}</td>
+                                <td>${anomaly.anomaly_type}</td>
+                                <td>${anomaly.source_ip}</td>
+                                <td>${anomaly.destination_ip || 'N/A'}</td>
+                                <td>${anomaly.details}</td>
+                            </tr>
+                        `;
+                        tableBody.innerHTML += row;
+                    });
+                });
+        }
+
+        // Fetch and populate bottlenecks
+        function fetchBottlenecks() {
+            fetch('/get_bottlenecks')
+                .then(response => response.json())
+                .then(data => {
+                    const tableBody = document.querySelector('#bottlenecks-table tbody');
+                    tableBody.innerHTML = '';
+                    data.forEach(bottleneck => {
+                        const row = `
+                            <tr>
+                                <td>${bottleneck.id}</td>
+                                <td>${bottleneck.timestamp}</td>
+                                <td>${bottleneck.bottleneck_type}</td>
+                                <td>${bottleneck.source_ip || 'N/A'}</td>
+                                <td>${bottleneck.details}</td>
+                            </tr>
+                        `;
+                        tableBody.innerHTML += row;
+                    });
+                });
+        }
+
+        // Refresh data every 5 seconds
+        setInterval(() => {
+            fetchAnomalies();
+            fetchBottlenecks();
+        }, 5000);
+
+        // Initial fetch
+        fetchAnomalies();
+        fetchBottlenecks();
+    </script>
+</body>
+</html>

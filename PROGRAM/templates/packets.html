@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Packets Monitoring</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f4f4f9;
+        }
+        header {
+            background-color: #333;
+            color: #fff;
+            padding: 10px 20px;
+            text-align: center;
+        }
+        nav {
+            background-color: #444;
+            padding: 10px;
+            text-align: center;
+        }
+        nav a {
+            color: white;
+            text-decoration: none;
+            margin: 0 15px;
+            font-weight: bold;
+        }
+        nav a:hover {
+            text-decoration: underline;
+        }
+        .container {
+            padding: 20px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+        }
+        table th, table td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+        table th {
+            background-color: #333;
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>Packets Monitoring</h1>
+    </header>
+    <nav>
+        <a href="/packets">Packets</a>
+        <a href="/anomalies_bottlenecks">Bottlenecks & Anomalies</a>
+    </nav>
+    <div class="container">
+        <table id="packets-table">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Timestamp</th>
+                    <th>Source IP</th>
+                    <th>Destination IP</th>
+                    <th>Protocol</th>
+                    <th>Size</th>
+                </tr>
+            </thead>
+            <tbody>
+                <!-- Data will be populated dynamically -->
+            </tbody>
+        </table>
+    </div>
+    <script>
+        // Fetch and populate packets
+        function fetchPackets() {
+            fetch('/get_packets')
+                .then(response => response.json())
+                .then(data => {
+                    const tableBody = document.querySelector('#packets-table tbody');
+                    tableBody.innerHTML = '';
+                    data.forEach(packet => {
+                        const row = `
+                            <tr>
+                                <td>${packet.id}</td>
+                                <td>${packet.timestamp}</td>
+                                <td>${packet.src_ip}</td>
+                                <td>${packet.dst_ip}</td>
+                                <td>${packet.protocol}</td>
+                                <td>${packet.size}</td>
+                            </tr>
+                        `;
+                        tableBody.innerHTML += row;
+                    });
+                });
+        }
+
+        // Refresh data every 5 seconds
+        setInterval(fetchPackets, 5000);
+
+        // Initial fetch
+        fetchPackets();
+    </script>
+</body>
+</html>
