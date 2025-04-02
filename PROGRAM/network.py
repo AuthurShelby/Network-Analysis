@@ -7,7 +7,7 @@ import time
 import threading
 
 app = Flask(__name__)
-# mysql connection 
+# mysql connection
 def get_connection():
     return mysql.connector.connect(
         host='localhost',
@@ -17,10 +17,11 @@ def get_connection():
     )
 
 # for anomaly logs
-def create_anomaly_detection():
+def create_tables():
     conn = get_connection()
     cursor = conn.cursor()
-    query = """
+    # creating the anomaly_logs table 
+    cursor.execute( """
     CREATE TABLE IF NOT EXISTS anomaly_logs (
         id INT AUTO_INCREMENT PRIMARY KEY,
         timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
@@ -31,22 +32,27 @@ def create_anomaly_detection():
         failed_attempts INT NULL,
         details TEXT
     )
-    """
-    cursor.execute(query)
+    """)
+    # creating the bottleneck_logs table
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS bottleneck_logs (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
+        bottleneck_type VARCHAR(50),
+        source_ip VARCHAR(45) NULL,
+        packet_loss_rate FLOAT NULL,
+        average_latency FLOAT NULL,
+        data_transferred FLOAT NULL,
+        details TEXT
+    )""")
     conn.commit()
     cursor.close()
     conn.close()
 
 
-# intializing for anomalies detection 
-packet_counts = Counter() # for DDos
-failed_attempts = {} # for brute-force attack detection 
-suspicious_ips = ["45.67.89.10"] # example of malicious ip
-total_packets = 0
-start_time = time.time() 
-
 # for inserting the values inside the anomalies table
 def insert_anomaly(anomaly_type, src_ip, dst_ip, packet_rate, failed_attempts, details):
+
     conn = get_connection()
     cursor = conn.cursor()
     query = """
@@ -58,10 +64,44 @@ def insert_anomaly(anomaly_type, src_ip, dst_ip, packet_rate, failed_attempts, d
     cursor.close()
     conn.close()
 
+# for inserting the values inside the bottlenecks table
+def insert_bottlenecks(bottleneck_type , src_ip , packet_loss_rate , avg_latency , data_transferred , details):
+    conn = get_connection()
+    cursor = conn.cursor()
+    query="""
+    INSERT INTO bottleneck_logs(bottleneck_type , source_ip , packet_loss_rate , average_latency , data_transferred , details) 
+    VALUES(%s , %s , %s , %s , %s , %s)
+    """
+    cursor.execute(query , (bottleneck_type , src_ip , packet_loss_rate , avg_latency , data_transferred , details))
+    conn.commit()
+    cursor.close()
+    conn.close()
+
+# the set of global variables that are used for
+# detecting the anomalies and bottlenecks
+# intializing for anomalies detection 
+packet_counts = Counter() # for DDos
+failed_attempts = {} # for brute-force attack detection 
+suspicious_ips = ["45.67.89.10"] # example of malicious ip
+start_time = time.time() 
+
+# intializing for bottlenecks detection
+# packet loss detection
+total_packets = 0
+packet_loss_count = 0
+# Track latency samples 
+latency_samples= []
+# Track bandwidth usage
+bandwidth_usage = Counter()
+start_bandwidth_time = time.time()
+
+# Track connection timeouts
+connection_attempts = Counter()
+timeout_threshold = 5  # Max failed attempts before logging timeout
+
 # network packets 
 def packet_callback(packet):
-
-    global packet_counts , failed_attempts , total_packets , start_time
+    global packet_counts , failed_attempts , total_packets , start_time , packet_loss_count , latency_samples , bandwidth_usage, start_bandwidth_time
 
     src_ip, src_port, dst_ip, dst_port, protocol = (None,) * 5
     protocol_type = 'Other' # if any other protocol appears
@@ -118,8 +158,60 @@ def packet_callback(packet):
     if dst_ip in suspicious_ips:
         insert_anomaly("Malware Activity" , src_ip , dst_ip , None , None , f"Suspicious connection detected to {dst_ip}")
 
+
+    # Bottle-necks detection
+    # packets count part
+    total_packets+=1
+    if not packet.haslayer(IP):
+        packet_loss_count+=1
+    
+    # packet loss_rate
+    if total_packets % 10 == 0:
+        loss_rate = (packet_loss_count/total_packets)*100
+        if loss_rate > 5:
+            insert_bottlenecks("Packet loss" , None , loss_rate , None , None , f"Packet loss rate: {loss_rate:.2f}%")
+    
+    # finding latency 
+    # if it get's the acknowledgement aka 'ack'
+    if TCP in packet and hasattr(packet[TCP] , 'ack'): 
+        current_time = time.time()
+        latency_samples.append(current_time - packet.time)
+
+    if len(latency_samples) > 10:
+        avg_latency = (sum(latency_samples) / len(latency_samples) ) * 1000
+        # if the average latency is greater than 200ms
+        # then it is considered as a bottleneck
+        if avg_latency > 200: 
+            insert_bottlenecks("High latency" , None , None , avg_latency , None , f"High latency detected: {avg_latency:.2f} ms")
+        latency_samples = []
+
+    # Bandwidth usage detection
+    if IP in packet:
+        src_ip = packet[IP].src
+        packet_size = len(packet)
+        bandwidth_usage[src_ip] += packet_size
+        # Check if bandwidth usage exceeds threshold
+        if time.time() - start_bandwidth_time > 60:
+            for ip, data_used in bandwidth_usage.items():
+                if data_used > 10 * 1024 * 1024:  # 10MB threshold
+                        insert_bottlenecks("High Bandwidth Usage", ip, None, None, data_used / (1024 * 1024), 
+                                      f"Excessive data transfer detected: {data_used / (1024 * 1024):.2f} MB in 60 sec")
+            bandwidth_usage.clear()
+            start_bandwidth_time = time.time()
+
+    # Connection timeout detection
+    if TCP in packet and packet[TCP].flags == 2:  # SYN flag set (connection attempt)
+        connection_attempts[src_ip] += 1
+    elif TCP in packet and packet[TCP].flags in [16, 18]:  # ACK or SYN-ACK flag
+        connection_attempts[src_ip] = 0  # Reset on successful handshake
+
+    if connection_attempts[src_ip] > timeout_threshold:
+        insert_bottlenecks("Connection Timeout", src_ip, None, None, None, 
+                          "Multiple connection attempts failed")
+        connection_attempts[src_ip] = 0  # Reset after logging
+
     # Reseting the time for reducing the incorrect rate
-    if start_time > 60:
+    if time.time() - start_time > 60:
         start_time = time.time()
         for ip in list(packet_counts.keys()):
             packet_counts[ip] = max(0 , packet_counts[ip] - 50) # Reduce by 50 instead of fully resting the packet_count
@@ -169,6 +261,19 @@ def get_anomalies():
     conn.close()
     return jsonify(anomalies)
 
+# /get_bottlenecks for fetching
+# All the bottlenecks that are detected
+# such as packet loss , high latency
+@app.route('/get_bottlenecks')
+def get_bottlenecks():
+    conn = get_connection()
+    cursor = conn.cursor(dictionary=True)
+    cursor.execute('SELECT * FROM bottleneck_logs ORDER BY id DESC')
+    bottlenecks = cursor.fetchall()
+    cursor.close()
+    conn.close()
+    return jsonify(bottlenecks)
+
 @app.route('/')
 def index():
     # rendering the network page
@@ -176,7 +281,7 @@ def index():
 
 if __name__ == '__main__':
     # threading is used so that multiple process can happen internally 
-    create_anomaly_detection() # creating anomaly table 
+    create_tables() # creating anomaly , bottlenecks table 
     sniff_thread = threading.Thread(target=start_sniffing, daemon=True)
     sniff_thread.start()
     app.run(debug=True)
