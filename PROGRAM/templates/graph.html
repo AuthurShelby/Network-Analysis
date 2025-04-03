@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Network Graph</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        /* Styling for the navigation bar */
+        nav {
+            background-color: #333;
+            overflow: hidden;
+            display: flex;
+            justify-content: space-around;
+            padding: 10px 0;
+        }
+        nav a {
+            color: white;
+            text-decoration: none;
+            padding: 14px 20px;
+            font-size: 16px;
+        }
+        nav a:hover {
+            background-color: #575757;
+            border-radius: 5px;
+        }
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            background-color: #f4f4f9;
+            margin: 0;
+            padding: 0;
+        }
+        h2 {
+            margin-top: 20px;
+        }
+        canvas {
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation Bar -->
+    <nav>
+        <a href="/packets">Packets</a>
+        <a href="/anomalies_bottlenecks">Anomalies & Bottlenecks</a>
+        <a href="/graph">Graph</a>
+    </nav>
+
+    <h2>Real-Time Network Anomalies and Bottlenecks</h2>
+    <canvas id="networkChart"></canvas>
+
+    <script>
+        // Get the canvas context
+        let ctx = document.getElementById('networkChart').getContext('2d');
+
+        // Initialize the Chart.js graph
+        let networkChart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: [], // Timestamps
+                datasets: [
+                    {
+                        label: 'Anomalies (Packet Rate)',
+                        borderColor: 'red',
+                        fill: false,
+                        data: [] // Packet rates for anomalies
+                    },
+                    {
+                        label: 'Bottlenecks (Average Latency)',
+                        borderColor: 'blue',
+                        fill: false,
+                        data: [] // Average latency for bottlenecks
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                scales: {
+                    x: {
+                        title: { display: true, text: 'Timestamp' }
+                    },
+                    y: {
+                        title: { display: true, text: 'Rate / Latency' }
+                    }
+                }
+            }
+        });
+
+        // Function to fetch data from the API and update the graph
+        function fetchGraphData() {
+            fetch('/get_graph_data')
+                .then(response => response.json())
+                .then(data => {
+                    // Update labels and datasets
+                    networkChart.data.labels = data.anomalies.map(a => a.timestamp);
+                    networkChart.data.datasets[0].data = data.anomalies.map(a => a.packet_rate);
+                    networkChart.data.datasets[1].data = data.bottlenecks.map(b => b.average_latency);
+                    networkChart.update(); // Refresh the graph
+                })
+                .catch(error => console.error('Error fetching graph data:', error));
+        }
+
+        // Fetch data every 1.5 seconds
+        setInterval(fetchGraphData, 1500); // Refresh every 1.5 seconds
+        fetchGraphData(); // Initial load
+    </script>
+</body>
+</html>
