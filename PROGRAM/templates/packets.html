@@ -5,60 +5,99 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Packets Monitoring</title>
     <style>
+        /* General body styling */
         body {
             font-family: Arial, sans-serif;
             margin: 0;
             padding: 0;
             background-color: #f4f4f9;
         }
+
+        /* Header styling */
         header {
             background-color: #333;
             color: #fff;
             padding: 10px 20px;
             text-align: center;
         }
+
+        /* Navigation bar styling */
         nav {
             background-color: #444;
-            padding: 10px;
-            text-align: center;
+            display: flex;
+            justify-content: center;
+            padding: 10px 0;
         }
         nav a {
             color: white;
             text-decoration: none;
             margin: 0 15px;
+            font-size: 16px;
             font-weight: bold;
+            padding: 10px 15px;
         }
         nav a:hover {
-            text-decoration: underline;
+            background-color: #575757;
+            border-radius: 5px;
         }
+
+        /* Container styling */
         .container {
             padding: 20px;
+            max-width: 1200px;
+            margin: 0 auto;
         }
+
+        /* Table styling */
         table {
             width: 100%;
             border-collapse: collapse;
             margin-bottom: 20px;
+            background-color: #fff;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
         }
         table th, table td {
             border: 1px solid #ddd;
-            padding: 8px;
+            padding: 10px;
             text-align: left;
         }
         table th {
             background-color: #333;
             color: white;
         }
+        table tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+        table tr:hover {
+            background-color: #f1f1f1;
+        }
+
+        /* Footer styling */
+        footer {
+            text-align: center;
+            padding: 10px 0;
+            background-color: #333;
+            color: white;
+            margin-top: 20px;
+        }
     </style>
 </head>
 <body>
+    <!-- Header -->
     <header>
         <h1>Packets Monitoring</h1>
     </header>
+
+    <!-- Navigation Bar -->
     <nav>
         <a href="/packets">Packets</a>
         <a href="/anomalies_bottlenecks">Bottlenecks & Anomalies</a>
+        <a href="/graph">Graph</a>
     </nav>
+
+    <!-- Main Content -->
     <div class="container">
+        <h2>Real-Time Packets Data</h2>
         <table id="packets-table">
             <thead>
                 <tr>
@@ -75,6 +114,12 @@
             </tbody>
         </table>
     </div>
+
+    <!-- Footer -->
+    <footer>
+        <p>&copy; 2025 Network Monitoring System</p>
+    </footer>
+
     <script>
         // Fetch and populate packets
         function fetchPackets() {
@@ -99,8 +144,8 @@
                 });
         }
 
-        // Refresh data every 5 seconds
-        setInterval(fetchPackets, 5000);
+        // Refresh data every 1.5 seconds
+        setInterval(fetchPackets, 1500);
 
         // Initial fetch
         fetchPackets();
