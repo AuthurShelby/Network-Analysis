@@ -20,6 +20,24 @@ def get_connection():
 def create_tables():
     conn = get_connection()
     cursor = conn.cursor()
+
+    # creating the packets table
+    cursor.execute("""
+    CREATE TABLE IF NOT EXISTS network_logs (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
+    src_ip VARCHAR(50) NOT NULL,
+    src_port VARCHAR(10),
+    dst_ip VARCHAR(50) NOT NULL,
+    dst_port VARCHAR(10),
+    protocol VARCHAR(10) NOT NULL,
+    protocol_type VARCHAR(10),
+    payload TEXT,
+    size INT NOT NULL,
+    INDEX (timestamp),
+    INDEX (src_ip),
+    INDEX (dst_ip),
+    INDEX (protocol))""")
     # creating the anomaly_logs table 
     cursor.execute( """
     CREATE TABLE IF NOT EXISTS anomaly_logs (
