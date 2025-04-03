@@ -218,6 +218,8 @@ def packet_callback(packet):
         for ip in list(packet_counts.keys()):
             packet_counts[ip] = max(0 , packet_counts[ip] - 50) # Reduce by 50 instead of fully resting the packet_count
 
+    
+
     # if any database error occurs
     # while storing the data 
     try:
@@ -237,6 +239,29 @@ def packet_callback(packet):
 
 def start_sniffing():
     sniff(prn=packet_callback, filter='ip', store=0)
+
+@app.route('/get_graph_data')
+def get_graph_data():
+    conn = get_connection()
+    cursor = conn.cursor(dictionary=True)
+
+    # Fetch anomalies
+    cursor.execute('SELECT timestamp, packet_rate FROM anomaly_logs ORDER BY id DESC LIMIT 50')
+    anomalies = cursor.fetchall()
+
+    # Fetch bottlenecks
+    cursor.execute('SELECT timestamp, average_latency FROM bottleneck_logs ORDER BY id DESC LIMIT 50')
+    bottlenecks = cursor.fetchall()
+
+    cursor.close()
+    conn.close()
+
+    # Convert timestamps to readable format
+    anomaly_data = [{"timestamp": a["timestamp"].strftime('%Y-%m-%d %H:%M:%S'), "packet_rate": a["packet_rate"] or 0} for a in anomalies]
+    bottleneck_data = [{"timestamp": b["timestamp"].strftime('%Y-%m-%d %H:%M:%S'), "average_latency": b["average_latency"] or 0} for b in bottlenecks]
+
+    return jsonify({"anomalies": anomaly_data, "bottlenecks": bottleneck_data})
+
 
 # for fetching the packets 
 # and returning the packets to the html page 
@@ -290,7 +315,12 @@ def index():
 @app.route('/anomalies_bottlenecks')
 def anomalies_bottlenecks():
     # rendering the anomalies and bottlenecks page
-    return render_template('Anomalies_Bottlenecks.html')
+    return render_template('anomalies_bottlenecks.html')
+
+@app.route('/graph')
+def graph():
+    # rendering the graph page
+    return render_template('graph.html')
 
 if __name__ == '__main__':
     # threading is used so that multiple process can happen internally 
