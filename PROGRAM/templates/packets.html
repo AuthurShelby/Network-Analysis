@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Packets Monitoring</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         /* General body styling */
         body {
@@ -45,6 +46,20 @@
         .container {
             padding: 20px;
             max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        /* Graph container styling */
+        .graph-container {
+            margin-bottom: 20px;
+            text-align: center;
+            padding: 10px;
+            background-color: #fff;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            border-radius: 10px;
+        }
+        .graph-container canvas {
+            max-width: 600px;
             margin: 0 auto;
         }
 
@@ -97,11 +112,17 @@
 
     <!-- Main Content -->
     <div class="container">
+        <!-- Protocol Distribution Graph -->
+        <div class="graph-container">
+            <h2>Protocol Distribution</h2>
+            <canvas id="protocolChart"></canvas>
+        </div>
+
+        <!-- Packets Table -->
         <h2>Real-Time Packets Data</h2>
         <table id="packets-table">
             <thead>
                 <tr>
-                    <th>ID</th>
                     <th>Timestamp</th>
                     <th>Source IP</th>
                     <th>Destination IP</th>
@@ -121,6 +142,9 @@
     </footer>
 
     <script>
+        // Define a variable to hold the chart instance
+        let protocolChart;
+    
         // Fetch and populate packets
         function fetchPackets() {
             fetch('/get_packets')
@@ -131,11 +155,10 @@
                     data.forEach(packet => {
                         const row = `
                             <tr>
-                                <td>${packet.id}</td>
                                 <td>${packet.timestamp}</td>
                                 <td>${packet.src_ip}</td>
                                 <td>${packet.dst_ip}</td>
-                                <td>${packet.protocol}</td>
+                                <td>${packet.protocol_type}</td>
                                 <td>${packet.size}</td>
                             </tr>
                         `;
@@ -143,12 +166,73 @@
                     });
                 });
         }
+    
+       // Fetch protocol distribution and render or update the graph
+function fetchProtocolDistribution() {
+    fetch('/get_protocol_distribution')
+        .then(response => response.json())
+        .then(data => {
+            const labels = data.map(item => item.protocol_type);
+            const counts = data.map(item => item.count);
 
+            if (protocolChart) {
+                // Update the existing chart
+                protocolChart.data.labels = labels;
+                protocolChart.data.datasets[0].data = counts;
+                protocolChart.update();
+            } else {
+                // Create the chart for the first time
+                const ctx = document.getElementById('protocolChart').getContext('2d');
+                protocolChart = new Chart(ctx, {
+                    type: 'bar',
+                    data: {
+                        labels: labels,
+                        datasets: [{
+                            label: 'Protocol Usage',
+                            data: counts,
+                            backgroundColor: [
+                                '#4caf50', '#2196f3', '#ff9800', '#f44336', '#9c27b0'
+                            ],
+                            borderRadius: 10,
+                            barThickness: 30
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        plugins: {
+                            legend: {
+                                display: false
+                            }
+                        },
+                        scales: {
+                            x: {
+                                title: {
+                                    display: true,
+                                    text: 'Protocol'
+                                }
+                            },
+                            y: {
+                                title: {
+                                    display: true,
+                                    text: 'Count'
+                                },
+                                beginAtZero: true
+                            }
+                        }
+                    }
+                });
+            }
+        });
+}
         // Refresh data every 1.5 seconds
-        setInterval(fetchPackets, 1500);
-
+        setInterval(() => {
+            fetchPackets();
+            fetchProtocolDistribution();
+        }, 1500);
+    
         // Initial fetch
         fetchPackets();
+        fetchProtocolDistribution();
     </script>
 </body>
 </html>
