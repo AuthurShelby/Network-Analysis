@@ -258,27 +258,6 @@ def packet_callback(packet):
 def start_sniffing():
     sniff(prn=packet_callback, filter='ip', store=0)
 
-@app.route('/get_graph_data')
-def get_graph_data():
-    conn = get_connection()
-    cursor = conn.cursor(dictionary=True)
-
-    # Fetch anomalies
-    cursor.execute('SELECT timestamp, packet_rate FROM anomaly_logs ORDER BY id DESC LIMIT 50')
-    anomalies = cursor.fetchall()
-
-    # Fetch bottlenecks
-    cursor.execute('SELECT timestamp, average_latency FROM bottleneck_logs ORDER BY id DESC LIMIT 50')
-    bottlenecks = cursor.fetchall()
-
-    cursor.close()
-    conn.close()
-
-    # Convert timestamps to readable format
-    anomaly_data = [{"timestamp": a["timestamp"].strftime('%Y-%m-%d %H:%M:%S'), "packet_rate": a["packet_rate"] or 0} for a in anomalies]
-    bottleneck_data = [{"timestamp": b["timestamp"].strftime('%Y-%m-%d %H:%M:%S'), "average_latency": b["average_latency"] or 0} for b in bottlenecks]
-
-    return jsonify({"anomalies": anomaly_data, "bottlenecks": bottleneck_data})
 
 
 # for fetching the packets 
@@ -293,6 +272,21 @@ def get_packets():
     cursor.close()
     conn.close()
     return jsonify(packets)
+
+@app.route('/get_protocol_distribution')
+def get_protocol_distribution():
+    conn = get_connection()
+    cursor = conn.cursor(dictionary=True)
+    
+    # Query to count the number of packets for each protocol
+    cursor.execute('SELECT protocol_type, COUNT(*) as count FROM packets GROUP BY protocol_type')
+    protocol_data = cursor.fetchall()
+    
+    cursor.close()
+    conn.close()
+    
+    # Return the data as JSON
+    return jsonify(protocol_data)
 
 # /get_anomalies for fetching 
 # All the DDoS attack , Brute-Force , Malware
@@ -318,6 +312,28 @@ def get_bottlenecks():
     cursor.close()
     conn.close()
     return jsonify(bottlenecks)
+
+@app.route('/get_graph_data')
+def get_graph_data():
+    conn = get_connection()
+    cursor = conn.cursor(dictionary=True)
+
+    # Fetch anomalies
+    cursor.execute('SELECT timestamp, packet_rate FROM anomaly_logs ORDER BY id DESC LIMIT 50')
+    anomalies = cursor.fetchall()
+
+    # Fetch bottlenecks
+    cursor.execute('SELECT timestamp, average_latency FROM bottleneck_logs ORDER BY id DESC LIMIT 50')
+    bottlenecks = cursor.fetchall()
+
+    cursor.close()
+    conn.close()
+
+    # Convert timestamps to readable format
+    anomaly_data = [{"timestamp": a["timestamp"].strftime('%Y-%m-%d %H:%M:%S'), "packet_rate": a["packet_rate"] or 0} for a in anomalies]
+    bottleneck_data = [{"timestamp": b["timestamp"].strftime('%Y-%m-%d %H:%M:%S'), "average_latency": b["average_latency"] or 0} for b in bottlenecks]
+
+    return jsonify({"anomalies": anomaly_data, "bottlenecks": bottleneck_data})
 
 
 # root '/' is the main page
