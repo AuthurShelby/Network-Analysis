@@ -1,4 +1,4 @@
-from scapy.all import sniff, IP, TCP, UDP, Raw , ICMP , ARP , DNS , SSL , TLS
+from scapy.all import sniff, IP, TCP, UDP, Raw , ICMP , ARP , DNS 
 from flask import Flask, render_template , jsonify , redirect
 from datetime import datetime , timezone
 from collections import Counter
@@ -6,6 +6,7 @@ import mysql.connector
 import time
 import threading
 
+# APP
 app = Flask(__name__)
 # mysql connection
 def get_connection():
@@ -31,7 +32,7 @@ def create_tables():
     dst_ip VARCHAR(50) NOT NULL,
     dst_port VARCHAR(10),
     protocol VARCHAR(10) NOT NULL,
-    protocol_type VARCHAR(10),
+    protocol_type VARCHAR(50),
     payload TEXT,
     size INT NOT NULL,
     INDEX (timestamp),
@@ -131,27 +132,37 @@ def packet_callback(packet):
     
     # catching the protocols
     if IP in packet:
+
         src_ip = packet[IP].src
         dst_ip = packet[IP].dst
         protocol = packet[IP].proto
 
         # Check known protocol types
-        if TCP in packet:
+        if TCP in packet and packet[IP].proto == 6:
             src_port = packet[TCP].sport
             dst_port = packet[TCP].dport
             protocol_type = 'TCP'
-        elif UDP in packet:
+        elif UDP in packet and packet[IP].proto == 17:
             src_port = packet[UDP].sport
             dst_port = packet[UDP].dport
             protocol_type = 'UDP'
-        elif ICMP in packet:
+        elif ICMP in packet or (IP in packet and packet[IP].proto == 1):
             protocol_type = 'ICMP'
-        elif packet.haslayer(ARP):
-            protocol_type = 'ARP'
         elif packet.haslayer(DNS):
             protocol_type = 'DNS'
-        elif packet.haslayer(SSL) or packet.haslayer(TLS):
-            protocol_type = 'SSL/TLS'
+        elif protocol == 89:  # Example: OSPF
+            protocol_type = 'OSPF'
+        elif protocol == 47:  # Example: GRE
+            protocol_type = 'GRE'
+        elif protocol == 50:  # Example: ESP
+            protocol_type = 'ESP'
+        elif protocol == 51:  # Example: AH
+            protocol_type = 'AH'
+        elif protocol == 58:  # Example: ICMPv6
+            protocol_type = 'ICMPv6'
+        else:
+            protocol_type = f"Other"
+
     # raw is the payload data or the actual data inside the packet
     
     if Raw in packet:
