@@ -1,4 +1,4 @@
-from scapy.all import sniff, IP, TCP, UDP, Raw
+from scapy.all import sniff, IP, TCP, UDP, Raw , ICMP , ARP , DNS , SSL , TLS
 from flask import Flask, render_template , jsonify , redirect
 from datetime import datetime , timezone
 from collections import Counter
@@ -129,24 +129,29 @@ def packet_callback(packet):
 
     timestamp = datetime.fromtimestamp(packet.time , tz=timezone.utc ).strftime('%Y-%m-%d %H:%M:%S')
     
+    # catching the protocols
     if IP in packet:
-
         src_ip = packet[IP].src
         dst_ip = packet[IP].dst
         protocol = packet[IP].proto
 
+        # Check known protocol types
         if TCP in packet:
-
             src_port = packet[TCP].sport
             dst_port = packet[TCP].dport
             protocol_type = 'TCP'
-        
         elif UDP in packet:
-
             src_port = packet[UDP].sport
             dst_port = packet[UDP].dport
             protocol_type = 'UDP'
-    
+        elif ICMP in packet:
+            protocol_type = 'ICMP'
+        elif packet.haslayer(ARP):
+            protocol_type = 'ARP'
+        elif packet.haslayer(DNS):
+            protocol_type = 'DNS'
+        elif packet.haslayer(SSL) or packet.haslayer(TLS):
+            protocol_type = 'SSL/TLS'
     # raw is the payload data or the actual data inside the packet
     
     if Raw in packet:
@@ -256,7 +261,7 @@ def packet_callback(packet):
 
 
 def start_sniffing():
-    sniff(prn=packet_callback, filter='ip', store=0)
+    sniff(iface = 'Wi-Fi',prn=packet_callback, filter='ip', store=0)
 
 
 
