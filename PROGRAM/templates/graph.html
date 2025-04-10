@@ -1,109 +1,142 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Network Graph</title>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>NetSecure - Network Graph</title>
+    <script src="https://cdn.tailwindcss.com/3.4.16"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            colors: { primary: "#2196F3", secondary: "#FF4444" },
+            borderRadius: {
+              button: "8px",
+            },
+          },
+        },
+      };
+    </script>
     <style>
-        /* Styling for the navigation bar */
-        nav {
-            background-color: #333;
-            overflow: hidden;
-            display: flex;
-            justify-content: space-around;
-            padding: 10px 0;
-        }
-        nav a {
-            color: white;
-            text-decoration: none;
-            padding: 14px 20px;
-            font-size: 16px;
-        }
-        nav a:hover {
-            background-color: #575757;
-            border-radius: 5px;
-        }
-        body {
-            font-family: Arial, sans-serif;
-            text-align: center;
-            background-color: #f4f4f9;
-            margin: 0;
-            padding: 0;
-        }
-        h2 {
-            margin-top: 20px;
-        }
-        canvas {
-            margin-top: 20px;
-        }
+      body {
+        font-family: 'Inter', sans-serif;
+        background-color: #f8f9fa;
+        color: #1f2937;
+      }
+      .custom-scrollbar::-webkit-scrollbar {
+        width: 6px;
+        height: 6px;
+      }
+      .custom-scrollbar::-webkit-scrollbar-thumb {
+        background: #c1c1c1;
+        border-radius: 8px;
+      }
+      .graph-container canvas {
+        width: 100%; /* Make the graph responsive */
+        max-width: 800px; /* Set a maximum width */
+        height: 400px; /* Set a fixed height */
+        margin: 0 auto; /* Center the graph */
+      }
     </style>
-</head>
-<body>
+  </head>
+  <body>
     <!-- Navigation Bar -->
-    <nav>
-        <a href="/packets">Packets</a>
-        <a href="/anomalies_bottlenecks">Anomalies & Bottlenecks</a>
-        <a href="/graph">Graph</a>
+    <nav class="bg-white shadow-md w-full fixed top-0 left-0 z-50">
+      <div class="max-w-7xl mx-auto px-4">
+        <div class="flex justify-between h-16">
+          <div class="flex items-center">
+            <span class="font-['Pacifico'] text-primary text-2xl">NetSecure</span>
+          </div>
+          <div class="hidden md:flex items-center space-x-8">
+            <a href="/packets" class="text-gray-600 hover:text-primary px-1 py-5 font-medium">Live Packets</a>
+            <a href="/anomalies_bottlenecks" class="text-gray-600 hover:text-primary px-1 py-5 font-medium">Anomalies & Bottlenecks</a>
+            <a href="/graph" class="text-primary border-b-2 border-primary px-1 py-5 font-medium">Traffic Graphs</a>
+          </div>
+        </div>
+      </div>
     </nav>
 
-    <h2>Real-Time Network Anomalies and Bottlenecks</h2>
-    <canvas id="networkChart"></canvas>
+    <!-- Main Content -->
+    <main class="pt-20 pb-8 px-4 md:px-6 max-w-7xl mx-auto">
+      <!-- Header -->
+      <div class="mb-6">
+        <h1 class="text-2xl font-bold text-gray-900">Real-Time Network Graph</h1>
+        <p class="text-gray-600">Visualize anomalies and bottlenecks in real-time</p>
+      </div>
+
+      <!-- Graph Section -->
+      <div class="bg-white rounded shadow mb-6 overflow-hidden">
+        <div class="p-4">
+          <h2 class="text-lg font-bold text-gray-900">Network Anomalies and Bottlenecks</h2>
+          <canvas id="networkChart"></canvas>
+        </div>
+      </div>
+    </main>
 
     <script>
-        // Get the canvas context
-        let ctx = document.getElementById('networkChart').getContext('2d');
+      // Get the canvas context
+      let ctx = document.getElementById('networkChart').getContext('2d');
 
-        // Initialize the Chart.js graph
-        let networkChart = new Chart(ctx, {
-            type: 'line',
-            data: {
-                labels: [], // Timestamps
-                datasets: [
-                    {
-                        label: 'Anomalies (Packet Rate)',
-                        borderColor: 'red',
-                        fill: false,
-                        data: [] // Packet rates for anomalies
-                    },
-                    {
-                        label: 'Bottlenecks (Average Latency)',
-                        borderColor: 'blue',
-                        fill: false,
-                        data: [] // Average latency for bottlenecks
-                    }
-                ]
+      // Initialize the Chart.js graph
+      let networkChart = new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels: [], // Timestamps
+          datasets: [
+            {
+              label: 'Anomalies (Packet Rate)',
+              borderColor: '#FF4444',
+              fill: false,
+              data: [] // Packet rates for anomalies
             },
-            options: {
-                responsive: true,
-                scales: {
-                    x: {
-                        title: { display: true, text: 'Timestamp' }
-                    },
-                    y: {
-                        title: { display: true, text: 'Rate / Latency' }
-                    }
-                }
+            {
+              label: 'Bottlenecks (Average Latency)',
+              borderColor: '#2196F3',
+              fill: false,
+              data: [] // Average latency for bottlenecks
             }
-        });
-
-        // Function to fetch data from the API and update the graph
-        function fetchGraphData() {
-            fetch('/get_graph_data')
-                .then(response => response.json())
-                .then(data => {
-                    // Update labels and datasets
-                    networkChart.data.labels = data.anomalies.map(a => a.timestamp);
-                    networkChart.data.datasets[0].data = data.anomalies.map(a => a.packet_rate);
-                    networkChart.data.datasets[1].data = data.bottlenecks.map(b => b.average_latency);
-                    networkChart.update(); // Refresh the graph
-                })
-                .catch(error => console.error('Error fetching graph data:', error));
+          ]
+        },
+        options: {
+          responsive: true,
+          plugins: {
+            legend: {
+              display: true,
+              position: 'top'
+            }
+          },
+          scales: {
+            x: {
+              title: { display: true, text: 'Timestamp' }
+            },
+            y: {
+              title: { display: true, text: 'Rate / Latency' },
+              beginAtZero: true
+            }
+          }
         }
+      });
 
-        // Fetch data every 1.5 seconds
-        setInterval(fetchGraphData, 1500); // Refresh every 1.5 seconds
-        fetchGraphData(); // Initial load
+      // Function to fetch data from the API and update the graph
+      async function fetchGraphData() {
+        try {
+          const response = await fetch('/get_graph_data');
+          const data = await response.json();
+
+          // Update labels and datasets
+          networkChart.data.labels = data.anomalies.map(a => a.timestamp);
+          networkChart.data.datasets[0].data = data.anomalies.map(a => a.packet_rate);
+          networkChart.data.datasets[1].data = data.bottlenecks.map(b => b.average_latency);
+          networkChart.update(); // Refresh the graph
+        } catch (error) {
+          console.error('Error fetching graph data:', error);
+        }
+      }
+
+      // Fetch data every 2.5 seconds
+      setInterval(fetchGraphData, 2500); // Refresh every 2.5 seconds
+      fetchGraphData(); // Initial load
     </script>
-</body>
+  </body>
 </html>

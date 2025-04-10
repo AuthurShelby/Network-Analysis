@@ -1,238 +1,207 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Packets Monitoring</title>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>NetSecure - Real-time Network Traffic Analysis</title>
+    <script src="https://cdn.tailwindcss.com/3.4.16"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            colors: { primary: "#2196F3", secondary: "#FF4444" },
+            borderRadius: {
+              button: "8px",
+            },
+          },
+        },
+      };
+    </script>
     <style>
-        /* General body styling */
-        body {
-            font-family: Arial, sans-serif;
-            margin: 0;
-            padding: 0;
-            background-color: #f4f4f9;
-        }
-
-        /* Header styling */
-        header {
-            background-color: #333;
-            color: #fff;
-            padding: 10px 20px;
-            text-align: center;
-        }
-
-        /* Navigation bar styling */
-        nav {
-            background-color: #444;
-            display: flex;
-            justify-content: center;
-            padding: 10px 0;
-        }
-        nav a {
-            color: white;
-            text-decoration: none;
-            margin: 0 15px;
-            font-size: 16px;
-            font-weight: bold;
-            padding: 10px 15px;
-        }
-        nav a:hover {
-            background-color: #575757;
-            border-radius: 5px;
-        }
-
-        /* Container styling */
-        .container {
-            padding: 20px;
-            max-width: 1200px;
-            margin: 0 auto;
-        }
-
-        /* Graph container styling */
-        .graph-container {
-            margin-bottom: 20px;
-            text-align: center;
-            padding: 10px;
-            background-color: #fff;
-            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-            border-radius: 10px;
-        }
-        .graph-container canvas {
-            max-width: 600px;
-            margin: 0 auto;
-        }
-
-        /* Table styling */
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-bottom: 20px;
-            background-color: #fff;
-            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-        }
-        table th, table td {
-            border: 1px solid #ddd;
-            padding: 10px;
-            text-align: left;
-        }
-        table th {
-            background-color: #333;
-            color: white;
-        }
-        table tr:nth-child(even) {
-            background-color: #f9f9f9;
-        }
-        table tr:hover {
-            background-color: #f1f1f1;
-        }
-
-        /* Footer styling */
-        footer {
-            text-align: center;
-            padding: 10px 0;
-            background-color: #333;
-            color: white;
-            margin-top: 20px;
-        }
+      body {
+        font-family: 'Inter', sans-serif;
+        background-color: #f8f9fa;
+        color: #1f2937;
+      }
+      .custom-scrollbar::-webkit-scrollbar {
+        width: 6px;
+        height: 6px;
+      }
+      .custom-scrollbar::-webkit-scrollbar-thumb {
+        background: #c1c1c1;
+        border-radius: 8px;
+      }
+      .table-header {
+        position: sticky;
+        top: 0;
+        z-index: 10;
+      }
+      .graph-container {
+  height: 100px; /* Set a fixed height for the container */
+}
+.graph-container canvas {
+  width: 100%; /* Make the graph responsive */
+  height: 100%; /* Ensure the canvas fills the container */
+}
     </style>
-</head>
-<body>
-    <!-- Header -->
-    <header>
-        <h1>Packets Monitoring</h1>
-    </header>
-
+  </head>
+  <body>
     <!-- Navigation Bar -->
-    <nav>
-        <a href="/packets">Packets</a>
-        <a href="/anomalies_bottlenecks">Bottlenecks & Anomalies</a>
-        <a href="/graph">Graph</a>
+    <nav class="bg-white shadow-md w-full fixed top-0 left-0 z-50">
+      <div class="max-w-7xl mx-auto px-4">
+        <div class="flex justify-between h-16">
+          <div class="flex items-center">
+            <span class="font-['Pacifico'] text-primary text-2xl">NetSecure</span>
+          </div>
+          <div class="hidden md:flex items-center space-x-8">
+            <a href="/packets" class="text-primary border-b-2 border-primary px-1 py-5 font-medium">Live Packets</a>
+            <a href="/anomalies_bottlenecks" class="text-gray-600 hover:text-primary px-1 py-5 font-medium">Anomalies & Bottlenecks</a>
+            <a href="/graph" class="text-gray-600 hover:text-primary px-1 py-5 font-medium">Traffic Graphs</a>
+          </div>
+        </div>
+      </div>
     </nav>
 
     <!-- Main Content -->
-    <div class="container">
-        <!-- Protocol Distribution Graph -->
-        <div class="graph-container">
-            <h2>Protocol Distribution</h2>
-            <canvas id="protocolChart"></canvas>
+    <main class="pt-20 pb-8 px-4 md:px-6 max-w-7xl mx-auto">
+      <!-- Header -->
+      <div class="mb-6">
+        <h1 class="text-2xl font-bold text-gray-900">Live Network Packets</h1>
+        <p class="text-gray-600">Real-time monitoring of network traffic</p>
+      </div>
+
+      <!-- Protocol Distribution Graph -->
+      <div class="bg-white rounded shadow mb-6 overflow-hidden">
+        <div class="p-4">
+          <h2 class="text-lg font-bold text-gray-900">Protocol Distribution</h2>
+          <canvas id="protocolChart"></canvas>
         </div>
+      </div>
 
-        <!-- Packets Table -->
-        <h2>Real-Time Packets Data</h2>
-        <table id="packets-table">
-            <thead>
-                <tr>
-                    <th>Timestamp</th>
-                    <th>Source IP</th>
-                    <th>Destination IP</th>
-                    <th>Protocol</th>
-                    <th>Size</th>
-                </tr>
+      <!-- Packets Table -->
+      <div class="bg-white rounded shadow mb-6 overflow-hidden">
+        <div class="overflow-x-auto custom-scrollbar">
+          <table class="min-w-full divide-y divide-gray-200">
+            <thead class="bg-gray-50 table-header">
+              <tr>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Timestamp</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Source IP</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Source Port</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Destination IP</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Dest Port</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Protocol</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Size</th>
+              </tr>
             </thead>
-            <tbody>
-                <!-- Data will be populated dynamically -->
+            <tbody id="packets-table" class="bg-white divide-y divide-gray-200">
+              <!-- Dynamic rows will be inserted here -->
             </tbody>
-        </table>
-    </div>
-
-    <!-- Footer -->
-    <footer>
-        <p>&copy; 2025 Network Monitoring System</p>
-    </footer>
+          </table>
+        </div>
+      </div>
+    </main>
 
     <script>
-        // Define a variable to hold the chart instance
-        let protocolChart;
-    
-        // Fetch and populate packets
-        function fetchPackets() {
-            fetch('/get_packets')
-                .then(response => response.json())
-                .then(data => {
-                    const tableBody = document.querySelector('#packets-table tbody');
-                    tableBody.innerHTML = '';
-                    data.forEach(packet => {
-                        const row = `
-                            <tr>
-                                <td>${packet.timestamp}</td>
-                                <td>${packet.src_ip}</td>
-                                <td>${packet.dst_ip}</td>
-                                <td>${packet.protocol_type}</td>
-                                <td>${packet.size}</td>
-                            </tr>
-                        `;
-                        tableBody.innerHTML += row;
-                    });
-                });
-        }
-    
-       // Fetch protocol distribution and render or update the graph
-function fetchProtocolDistribution() {
-    fetch('/get_protocol_distribution')
-        .then(response => response.json())
-        .then(data => {
-            const labels = data.map(item => item.protocol_type);
-            const counts = data.map(item => item.count);
+      // Define a variable to hold the chart instance
+      let protocolChart;
 
-            if (protocolChart) {
-                // Update the existing chart
-                protocolChart.data.labels = labels;
-                protocolChart.data.datasets[0].data = counts;
-                protocolChart.update();
-            } else {
-                // Create the chart for the first time
-                const ctx = document.getElementById('protocolChart').getContext('2d');
-                protocolChart = new Chart(ctx, {
-                    type: 'bar',
-                    data: {
-                        labels: labels,
-                        datasets: [{
-                            label: 'Protocol Usage',
-                            data: counts,
-                            backgroundColor: [
-                                '#4caf50', '#2196f3', '#ff9800', '#f44336', '#9c27b0'
-                            ],
-                            borderRadius: 10,
-                            barThickness: 30
-                        }]
-                    },
-                    options: {
-                        responsive: true,
-                        plugins: {
-                            legend: {
-                                display: false
-                            }
-                        },
-                        scales: {
-                            x: {
-                                title: {
-                                    display: true,
-                                    text: 'Protocol'
-                                }
-                            },
-                            y: {
-                                title: {
-                                    display: true,
-                                    text: 'Count'
-                                },
-                                beginAtZero: true
-                            }
-                        }
+      // Fetch and populate packets
+      async function fetchPackets() {
+        try {
+          const response = await fetch('/get_packets');
+          const packets = await response.json();
+          const tableBody = document.getElementById('packets-table');
+          tableBody.innerHTML = ''; // Clear existing rows
+
+          packets.forEach(packet => {
+            const row = `
+              <tr class="hover:bg-gray-50">
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${packet.timestamp}</td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${packet.src_ip}</td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${packet.src_port || '-'}</td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${packet.dst_ip}</td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${packet.dst_port || '-'}</td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${packet.protocol_type}</td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${packet.size} bytes</td>
+              </tr>
+            `;
+            tableBody.insertAdjacentHTML('beforeend', row);
+          });
+        } catch (error) {
+          console.error('Error fetching packets:', error);
+        }
+      }
+
+      // Fetch protocol distribution and render or update the graph
+      async function fetchProtocolDistribution() {
+        try {
+          const response = await fetch('/get_protocol_distribution');
+          const data = await response.json();
+          const labels = data.map(item => item.protocol_type);
+          const counts = data.map(item => item.count);
+
+          if (protocolChart) {
+            // Update the existing chart
+            protocolChart.data.labels = labels;
+            protocolChart.data.datasets[0].data = counts;
+            protocolChart.update();
+          } else {
+            // Create the chart for the first time
+            const ctx = document.getElementById('protocolChart').getContext('2d');
+            protocolChart = new Chart(ctx, {
+              type: 'bar',
+              data: {
+                labels: labels,
+                datasets: [{
+                  label: 'Protocol Usage',
+                  data: counts,
+                  backgroundColor: [
+                    '#4caf50', '#2196f3', '#ff9800', '#f44336', '#9c27b0'
+                  ],
+                  borderRadius: 10,
+                  barThickness: 30
+                }]
+              },
+              options: {
+                responsive: true,
+                plugins: {
+                  legend: {
+                    display: false
+                  }
+                },
+                scales: {
+                  x: {
+                    title: {
+                      display: true,
+                      text: 'Protocol'
                     }
-                });
-            }
-        });
-}
-        // Refresh data every 1.5 seconds
-        setInterval(() => {
-            fetchPackets();
-            fetchProtocolDistribution();
-        }, 1500);
-    
-        // Initial fetch
+                  },
+                  y: {
+                    title: {
+                      display: true,
+                      text: 'Count'
+                    },
+                    beginAtZero: true
+                  }
+                }
+              }
+            });
+          }
+        } catch (error) {
+          console.error('Error fetching protocol distribution:', error);
+        }
+      }
+
+      // Auto-refresh every 2.5 seconds
+      setInterval(() => {
         fetchPackets();
         fetchProtocolDistribution();
+      }, 2500);
+
+      // Initial fetch
+      fetchPackets();
+      fetchProtocolDistribution();
     </script>
-</body>
+  </body>
 </html>

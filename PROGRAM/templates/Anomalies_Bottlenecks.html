@@ -1,212 +1,173 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Bottlenecks & Anomalies</title>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>NetSecure - Bottlenecks & Anomalies</title>
+    <script src="https://cdn.tailwindcss.com/3.4.16"></script>
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            colors: { primary: "#2196F3", secondary: "#FF4444" },
+            borderRadius: {
+              button: "8px",
+            },
+          },
+        },
+      };
+    </script>
     <style>
-        /* General body styling */
-        body {
-            font-family: Arial, sans-serif;
-            margin: 0;
-            padding: 0;
-            background-color: #f4f4f9;
-        }
-
-        /* Header styling */
-        header {
-            background-color: #333;
-            color: #fff;
-            padding: 10px 20px;
-            text-align: center;
-        }
-
-        /* Navigation bar styling */
-        nav {
-            background-color: #444;
-            display: flex;
-            justify-content: center;
-            padding: 10px 0;
-        }
-        nav a {
-            color: white;
-            text-decoration: none;
-            margin: 0 15px;
-            font-size: 16px;
-            font-weight: bold;
-            padding: 10px 15px;
-        }
-        nav a:hover {
-            background-color: #575757;
-            border-radius: 5px;
-        }
-
-        /* Container styling */
-        .container {
-            padding: 20px;
-            max-width: 1200px;
-            margin: 0 auto;
-        }
-
-        /* Section styling */
-        .section {
-            margin-bottom: 30px;
-        }
-        .section h2 {
-            margin-bottom: 15px;
-            color: #333;
-            text-align: left;
-        }
-
-        /* Table styling */
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-bottom: 20px;
-            background-color: #fff;
-            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-        }
-        table th, table td {
-            border: 1px solid #ddd;
-            padding: 10px;
-            text-align: left;
-        }
-        table th {
-            background-color: #333;
-            color: white;
-        }
-        table tr:nth-child(even) {
-            background-color: #f9f9f9;
-        }
-        table tr:hover {
-            background-color: #f1f1f1;
-        }
-
-        /* Footer styling */
-        footer {
-            text-align: center;
-            padding: 10px 0;
-            background-color: #333;
-            color: white;
-            margin-top: 20px;
-        }
+      body {
+        font-family: 'Inter', sans-serif;
+        background-color: #f8f9fa;
+        color: #1f2937;
+      }
+      .custom-scrollbar::-webkit-scrollbar {
+        width: 6px;
+        height: 6px;
+      }
+      .custom-scrollbar::-webkit-scrollbar-thumb {
+        background: #c1c1c1;
+        border-radius: 8px;
+      }
+      .table-header {
+        position: sticky;
+        top: 0;
+        z-index: 10;
+      }
     </style>
-</head>
-<body>
-    <!-- Header -->
-    <header>
-        <h1>Bottlenecks & Anomalies</h1>
-    </header>
-
+  </head>
+  <body>
     <!-- Navigation Bar -->
-    <nav>
-        <a href="/packets">Packets</a>
-        <a href="/anomalies_bottlenecks">Bottlenecks & Anomalies</a>
-        <a href="/graph">Graph</a>
+    <nav class="bg-white shadow-md w-full fixed top-0 left-0 z-50">
+      <div class="max-w-7xl mx-auto px-4">
+        <div class="flex justify-between h-16">
+          <div class="flex items-center">
+            <span class="font-['Pacifico'] text-primary text-2xl">NetSecure</span>
+          </div>
+          <div class="hidden md:flex items-center space-x-8">
+            <a href="/packets" class="text-gray-600 hover:text-primary px-1 py-5 font-medium">Live Packets</a>
+            <a href="/anomalies_bottlenecks" class="text-primary border-b-2 border-primary px-1 py-5 font-medium">Anomalies & Bottlenecks</a>
+            <a href="/graph" class="text-gray-600 hover:text-primary px-1 py-5 font-medium">Traffic Graphs</a>
+          </div>
+        </div>
+      </div>
     </nav>
 
     <!-- Main Content -->
-    <div class="container">
-        <!-- Anomalies Section -->
-        <div class="section">
-            <h2>Anomalies</h2>
-            <table id="anomalies-table">
-                <thead>
-                    <tr>
-                        <th>ID</th>
-                        <th>Timestamp</th>
-                        <th>Type</th>
-                        <th>Source IP</th>
-                        <th>Destination IP</th>
-                        <th>Details</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <!-- Data will be populated dynamically -->
-                </tbody>
-            </table>
-        </div>
+    <main class="pt-20 pb-8 px-4 md:px-6 max-w-7xl mx-auto">
+      <!-- Header -->
+      <div class="mb-6">
+        <h1 class="text-2xl font-bold text-gray-900">Bottlenecks & Anomalies</h1>
+        <p class="text-gray-600">Real-time monitoring of network anomalies and bottlenecks</p>
+      </div>
 
-        <!-- Bottlenecks Section -->
-        <div class="section">
-            <h2>Bottlenecks</h2>
-            <table id="bottlenecks-table">
-                <thead>
-                    <tr>
-                        <th>ID</th>
-                        <th>Timestamp</th>
-                        <th>Type</th>
-                        <th>Source IP</th>
-                        <th>Details</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <!-- Data will be populated dynamically -->
-                </tbody>
+      <!-- Anomalies Section -->
+      <div class="bg-white rounded shadow mb-6 overflow-hidden">
+        <div class="p-4">
+          <h2 class="text-lg font-bold text-gray-900">Anomalies</h2>
+          <div class="overflow-x-auto custom-scrollbar">
+            <table class="min-w-full divide-y divide-gray-200">
+              <thead class="bg-gray-50 table-header">
+                <tr>
+                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Timestamp</th>
+                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Type</th>
+                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Source IP</th>
+                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Destination IP</th>
+                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Details</th>
+                </tr>
+              </thead>
+              <tbody id="anomalies-table" class="bg-white divide-y divide-gray-200">
+                <!-- Dynamic rows will be inserted here -->
+              </tbody>
             </table>
+          </div>
         </div>
-    </div>
+      </div>
 
-    <!-- Footer -->
-    <footer>
-        <p>&copy; 2025 Network Monitoring System</p>
-    </footer>
+      <!-- Bottlenecks Section -->
+      <div class="bg-white rounded shadow mb-6 overflow-hidden">
+        <div class="p-4">
+          <h2 class="text-lg font-bold text-gray-900">Bottlenecks</h2>
+          <div class="overflow-x-auto custom-scrollbar">
+            <table class="min-w-full divide-y divide-gray-200">
+              <thead class="bg-gray-50 table-header">
+                <tr>
+                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Timestamp</th>
+                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Type</th>
+                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Source IP</th>
+                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Details</th>
+                </tr>
+              </thead>
+              <tbody id="bottlenecks-table" class="bg-white divide-y divide-gray-200">
+                <!-- Dynamic rows will be inserted here -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </main>
 
     <script>
-        // Fetch and populate anomalies
-        function fetchAnomalies() {
-            fetch('/get_anomalies')
-                .then(response => response.json())
-                .then(data => {
-                    const tableBody = document.querySelector('#anomalies-table tbody');
-                    tableBody.innerHTML = '';
-                    data.forEach(anomaly => {
-                        const row = `
-                            <tr>
-                                <td>${anomaly.id}</td>
-                                <td>${anomaly.timestamp}</td>
-                                <td>${anomaly.anomaly_type}</td>
-                                <td>${anomaly.source_ip}</td>
-                                <td>${anomaly.destination_ip || 'N/A'}</td>
-                                <td>${anomaly.details}</td>
-                            </tr>
-                        `;
-                        tableBody.innerHTML += row;
-                    });
-                });
+      // Fetch and populate anomalies
+      async function fetchAnomalies() {
+        try {
+          const response = await fetch('/get_anomalies');
+          const anomalies = await response.json();
+          const tableBody = document.getElementById('anomalies-table');
+          tableBody.innerHTML = ''; // Clear existing rows
+
+          anomalies.forEach(anomaly => {
+            const row = `
+              <tr class="hover:bg-gray-50">
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${anomaly.timestamp}</td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${anomaly.anomaly_type}</td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${anomaly.source_ip}</td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${anomaly.destination_ip || 'N/A'}</td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${anomaly.details}</td>
+              </tr>
+            `;
+            tableBody.insertAdjacentHTML('beforeend', row);
+          });
+        } catch (error) {
+          console.error('Error fetching anomalies:', error);
         }
+      }
 
-        // Fetch and populate bottlenecks
-        function fetchBottlenecks() {
-            fetch('/get_bottlenecks')
-                .then(response => response.json())
-                .then(data => {
-                    const tableBody = document.querySelector('#bottlenecks-table tbody');
-                    tableBody.innerHTML = '';
-                    data.forEach(bottleneck => {
-                        const row = `
-                            <tr>
-                                <td>${bottleneck.id}</td>
-                                <td>${bottleneck.timestamp}</td>
-                                <td>${bottleneck.bottleneck_type}</td>
-                                <td>${bottleneck.source_ip || 'N/A'}</td>
-                                <td>${bottleneck.details}</td>
-                            </tr>
-                        `;
-                        tableBody.innerHTML += row;
-                    });
-                });
+      // Fetch and populate bottlenecks
+      async function fetchBottlenecks() {
+        try {
+          const response = await fetch('/get_bottlenecks');
+          const bottlenecks = await response.json();
+          const tableBody = document.getElementById('bottlenecks-table');
+          tableBody.innerHTML = ''; // Clear existing rows
+
+          bottlenecks.forEach(bottleneck => {
+            const row = `
+              <tr class="hover:bg-gray-50">
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${bottleneck.timestamp}</td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${bottleneck.bottleneck_type}</td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${bottleneck.source_ip || 'N/A'}</td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${bottleneck.details}</td>
+              </tr>
+            `;
+            tableBody.insertAdjacentHTML('beforeend', row);
+          });
+        } catch (error) {
+          console.error('Error fetching bottlenecks:', error);
         }
+      }
 
-        // Refresh data every 1.5 seconds
-        setInterval(() => {
-            fetchAnomalies();
-            fetchBottlenecks();
-        }, 1.5);
-
-        // Initial fetch
+      // Auto-refresh every 2.5 seconds
+      setInterval(() => {
         fetchAnomalies();
         fetchBottlenecks();
+      }, 2500);
+
+      // Initial fetch
+      fetchAnomalies();
+      fetchBottlenecks();
     </script>
-</body>
+  </body>
 </html>
