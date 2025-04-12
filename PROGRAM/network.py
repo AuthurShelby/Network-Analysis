@@ -137,7 +137,7 @@ def packet_callback(packet):
         dst_ip = packet[IP].dst
         protocol = packet[IP].proto
 
-        # Check known protocol types
+        # Checking known protocol types
         if TCP in packet and packet[IP].proto == 6:
             src_port = packet[TCP].sport
             dst_port = packet[TCP].dport
@@ -146,19 +146,21 @@ def packet_callback(packet):
             src_port = packet[UDP].sport
             dst_port = packet[UDP].dport
             protocol_type = 'UDP'
+        # some of the protocol are not having port number
+        # source as well as for destionation
         elif ICMP in packet or (IP in packet and packet[IP].proto == 1):
             protocol_type = 'ICMP'
         elif packet.haslayer(DNS):
             protocol_type = 'DNS'
-        elif protocol == 89:  # Example: OSPF
+        elif protocol == 89:  
             protocol_type = 'OSPF'
-        elif protocol == 47:  # Example: GRE
+        elif protocol == 47:  
             protocol_type = 'GRE'
-        elif protocol == 50:  # Example: ESP
+        elif protocol == 50:  
             protocol_type = 'ESP'
-        elif protocol == 51:  # Example: AH
+        elif protocol == 51:  
             protocol_type = 'AH'
-        elif protocol == 58:  # Example: ICMPv6
+        elif protocol == 58:  
             protocol_type = 'ICMPv6'
         else:
             protocol_type = f"Other"
