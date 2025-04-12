@@ -17,14 +17,15 @@ def get_connection():
         database='network_analysis'
     )
 
-# for anomaly logs
+# creating tables for storing data
+# tables --- packets , anomaly_logs , bottleneck_logs
 def create_tables():
     conn = get_connection()
     cursor = conn.cursor()
 
     # creating the packets table
     cursor.execute("""
-    CREATE TABLE IF NOT EXISTS network_logs (
+    CREATE TABLE IF NOT EXISTS packets (
     id INT AUTO_INCREMENT PRIMARY KEY,
     timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
     src_ip VARCHAR(50) NOT NULL,
