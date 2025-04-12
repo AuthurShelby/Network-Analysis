@@ -1,4 +1,4 @@
-from scapy.all import sniff, IP, TCP, UDP, Raw , ICMP , ARP , DNS 
+from scapy.all import sniff, IP, TCP, UDP, Raw , ICMP , DNS 
 from flask import Flask, render_template , jsonify , redirect
 from datetime import datetime , timezone
 from collections import Counter
